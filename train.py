@@ -2,16 +2,21 @@ import numpy as np
 import pandas as pd 
 import matplotlib.pyplot as plt
 
-from data_loader import load_data
+from data_loader import load_data, load_data_with_density
 from model.DQN import DQN
 from model.environment import ENVIRONMENT
 
 np.random.seed(2023)
 
-leader_csv = "./platoon-resource-allocation/leader_density200.csv"
-member_csv = "./platoon-resource-allocation/member_density200.csv"
+# leader_csv = "./data/leader_density200_p1.csv"
+# member_csv = "./data/member_density200_p1.csv"
 
-rb_leader, rb_member = load_data(leader_csv, member_csv)
+leader_csv = "leader_density200.csv"
+member_csv = "member_density200.csv"
+
+density = 200
+
+rb_leader, rb_member = load_data_with_density(leader_csv, member_csv, density)
 rb_hidden = rb_member
 loss_val = []
 
@@ -54,13 +59,16 @@ print('------------------------------------------')
 for time in range(int(state_size/2), (len(rb_member))):
     action_index = np.where(rb_leader[time] == 0)
     action_index = np.reshape(action_index, len(action_index[0]))
-    # print(action_index)
     
     # DQN algo.
-    action = dqn_agent.choose_action(state, action_index)
+    # action = dqn_agent.choose_action(state, action_index)
 
     # Random selection algo.
-    # action = np.random.choice(action_index)
+    action = np.random.choice(action_index)
+    
+    # My algo.
+    # action = action_index[2]
+    
     
     observation_, reward = env.step(action, time)
     if observation_ > 0:
