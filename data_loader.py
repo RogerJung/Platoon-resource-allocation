@@ -1,15 +1,25 @@
 import pandas as pd
 
-
 def load_data(leader_csv, member_csv):
-    rb_leader = pd.read_csv(leader_csv)
-    rb_member = pd.read_csv(member_csv)
+    rb_leader = pd.read_csv(leader_csv, header=None)
+    rb_member = pd.read_csv(member_csv, header=None)
     len_train = int(len(rb_leader))
     rb_leader_train = rb_leader.values.reshape(
         rb_leader.shape[0], rb_leader.shape[1])[:len_train, :]
     rb_member_train = rb_member.values.reshape(
         rb_member.shape[0], rb_member.shape[1])[1:len_train, :]
+    
+    return rb_leader_train, rb_member_train
 
+def load_data_with_density(leader_csv, member_csv, density):
+    rb_leader = pd.read_csv(leader_csv, header=None)
+    rb_member = pd.read_csv(member_csv, header=None)
+    len_train = int(len(rb_leader))
+    rb_leader_train = rb_leader.values.reshape(
+        rb_leader.shape[0], rb_leader.shape[1])[:len_train, :density]
+    rb_member_train = rb_member.values.reshape(
+        rb_member.shape[0], rb_member.shape[1])[1:len_train, :density]
+    
     return rb_leader_train, rb_member_train
 
 

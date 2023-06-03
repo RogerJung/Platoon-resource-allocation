@@ -18,6 +18,7 @@ def same_seeds(seed):
 
 same_seeds(2023)
 
+
 def train(model,
           state,
           q_target,
@@ -37,9 +38,8 @@ def train(model,
         loss_fc = nn.MSELoss().cuda()
     
     optimizer = torch.optim.AdamW(model.parameters(), lr=learningRate)
+    # optimizer = torch.optim.SGD(model.parameters(), lr=learningRate, momentum=0.9)
 
-    # optimizer = torch.optim.SGD(
-    #     model.parameters(), lr=learningRate, momentum=0.9)
     loss = 0
     for epoch in range(epochs):
         optimizer.zero_grad()
@@ -112,6 +112,28 @@ class MyModel(nn.Module):
     def forward(self, x):
         x = self.layer(x)
         return x
+    
+class DeepQN(nn.Module):
+    def __init__(self, state_size, n_actions):
+        super(DeepQN, self).__init__()
+        self.layer = nn.Sequential(
+            nn.Conv1d(1, 1, 3, stride=2),
+            # nn.ReLU(),
+            # nn.Linear(1024, 512),
+            # nn.ReLU(),
+            # nn.Conv1d(512, 256),
+            # nn.ReLU(),
+            # nn.Linear(256, n_actions),
+            # nn.ReLU(),
+            # nn.Linear(256, n_actions),
+            # nn.ReLU(),
+        )
+
+
+    def forward(self, x):
+        # input: 32; output: 200
+        x = self.layer(x)
+        return x
 
 
 class DQN(nn.Module):
@@ -153,7 +175,7 @@ class DQN(nn.Module):
         else:
             self.model = MyModel(self.state_size, self.n_actions)
             # self.model = ResNet(self.state_size, self.n_actions)
-        # self.target_model = AllLinear(self.state_size, self.n_actions).cuda()
+        # self.target_model = MyModel(self.state_size, self.n_actions).cuda()
         print(self.model)
 
     def choose_action(self, state, action_index):
@@ -162,7 +184,9 @@ class DQN(nn.Module):
         self.epsilon = max(self.epsilon_min, self.epsilon)
         action_size_period = len(action_index)
         # set a little probability to choose a random selection
-        if np.random.random() < self.epsilon:
+        num = np.random.random()
+        if num < self.epsilon:
+            # print(num, self.epsilon)
             action_sel = np.random.choice(action_size_period)
             return action_index[action_sel]
 
@@ -176,9 +200,9 @@ class DQN(nn.Module):
         # according to the model output select an idle RB
         action = action_index[0]
         for i in range(1, action_size_period):
-            if q_out[0][action_index[i]] > q_out[0][action]:
-                action = action_index[i]
-                # print(action)
+            if action_index[i] < self.n_actions:
+                if q_out[0][action_index[i]] > q_out[0][action]:
+                    action = action_index[i]
         return action
 
 
@@ -190,7 +214,7 @@ class DQN(nn.Module):
         next_state = batch_memory[:, -self.state_size:]
 
         q_eval = self.model.forward(state)
-        #q_next = self.target_model.forward(state)
+        # q_next = self.target_model.forward(state)
 
         q_target = reward + self.gamma * torch.max(q_eval, axis=1)
         return (q_eval, q_target)
@@ -198,11 +222,13 @@ class DQN(nn.Module):
     def store_transition(self, s, a, r, s_):  # s_: next_state
         if not hasattr(self, 'memory_couter'):
             self.memory_couter = 0
+        
         transition = np.concatenate((s, [a, r], s_))
         index = self.memory_couter % self.memory_size
 
         self.memory[index, :] = transition
         self.memory_couter += 1
+
 
     def pretrain_learn(self, state):
         state = state[np.newaxis, :]
@@ -218,9 +244,9 @@ class DQN(nn.Module):
               epochs=1,
               verbose=0)
 
-    def repalce_target_parameters(self):
-        model_state_dict = self.model.state_dict()
-        self.target_model.load_state_dict(model_state_dict)
+    # def repalce_target_parameters(self):
+    #     model_state_dict = self.model.state_dict()
+    #     self.target_model.load_state_dict(model_state_dict)
 
     def learn(self):
         # check to update target network parameters

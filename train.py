@@ -8,8 +8,8 @@ from model.environment import ENVIRONMENT
 
 np.random.seed(2023)
 
-leader_csv = "./data/leader_density200_p1.csv"
-member_csv = "./data/member_density200_p1.csv"
+leader_csv = "./platoon-resource-allocation/leader_density200.csv"
+member_csv = "./platoon-resource-allocation/member_density200.csv"
 
 rb_leader, rb_member = load_data(leader_csv, member_csv)
 rb_hidden = rb_member
