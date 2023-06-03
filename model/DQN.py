@@ -175,7 +175,7 @@ class DQN(nn.Module):
         else:
             self.model = MyModel(self.state_size, self.n_actions)
             # self.model = ResNet(self.state_size, self.n_actions)
-        # self.target_model = MyModel(self.state_size, self.n_actions).cuda()
+        self.target_model = MyModel(self.state_size, self.n_actions).cuda()
         print(self.model)
 
     def choose_action(self, state, action_index):
@@ -214,7 +214,7 @@ class DQN(nn.Module):
         next_state = batch_memory[:, -self.state_size:]
 
         q_eval = self.model.forward(state)
-        # q_next = self.target_model.forward(state)
+        q_next = self.target_model.forward(state)
 
         q_target = reward + self.gamma * torch.max(q_eval, axis=1)
         return (q_eval, q_target)
@@ -244,14 +244,14 @@ class DQN(nn.Module):
               epochs=1,
               verbose=0)
 
-    # def repalce_target_parameters(self):
-    #     model_state_dict = self.model.state_dict()
-    #     self.target_model.load_state_dict(model_state_dict)
+    def repalce_target_parameters(self):
+        model_state_dict = self.model.state_dict()
+        self.target_model.load_state_dict(model_state_dict)
 
     def learn(self):
         # check to update target network parameters
-        # if self.learn_step_counter % self.replace_target_iter == 0:
-        #     self.repalce_target_parameters()  # iterative target model
+        if self.learn_step_counter % self.replace_target_iter == 0:
+            self.repalce_target_parameters()  # iterative target model
         self.learn_step_counter += 1
 
         # sample batch memory from all memory
@@ -282,7 +282,7 @@ class DQN(nn.Module):
 
         q_eval = self.model(state)  # state
         q_next = self.model(next_state)  # next state
-        # q_target = q_eval.cpu().detach().numpy()
+        # q_target = q_eval.detach().cpu().numpy()
         q_target = q_eval.clone()
 
         batch_index = np.arange(self.batch_size, dtype=np.int32)

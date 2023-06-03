@@ -36,10 +36,10 @@ dqn_agent = DQN(env.state_size,
                 memory_size=1000,
                 replace_target_iter=200,
                 batch_size=1,
-                learning_rate=0.01,
+                learning_rate=0.003,
                 gamma=0.9,
                 epsilon=0.1,
-                epsilon_min=0,
+                epsilon_min=0.01,
                 epsilon_decay=0.5,
                 )
 
@@ -55,20 +55,22 @@ print('------------------------------------------')
 print('---------- Start processing ... ----------')
 print('------------------------------------------')
 
+action_list = []
 
 for time in range(int(state_size/2), (len(rb_member))):
     action_index = np.where(rb_leader[time] == 0)
     action_index = np.reshape(action_index, len(action_index[0]))
     
     # DQN algo.
-    # action = dqn_agent.choose_action(state, action_index)
+    action = dqn_agent.choose_action(state, action_index)
 
     # Random selection algo.
-    action = np.random.choice(action_index)
+    # action = np.random.choice(action_index)
     
     # My algo.
     # action = action_index[2]
     
+    action_list.append(action)
     
     observation_, reward = env.step(action, time)
     if observation_ > 0:
@@ -93,3 +95,16 @@ for time in range(int(state_size/2), (len(rb_member))):
 p_col_rl = collision_num/((len(rb_member)) - int(state_size/2))
 print("\ntotal reward is {0}".format(total_reward))
 print("\ncollision probability = ", p_col_rl)
+
+path = 'output.txt'
+f = open(path, 'w')
+cnt = 0
+for i in action_list:
+    f.write(f'{str(i)}\t')
+    cnt += 1
+    if cnt > 20:
+        f.write("\n")
+        cnt = 0
+
+# saving model
+# dqn_agent.save_model('./model.ckpt')
