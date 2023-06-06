@@ -49,6 +49,7 @@ class ENVIRONMENT(object):
         reward = 0
         observation_ = int(self.rb_hidden[time][action] +
                            self.rb_leader[time + 1][action] > 0)
+
         reward = int(observation_ == 0)
         # print(reward)
 

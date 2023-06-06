@@ -22,7 +22,7 @@ loss_val = []
 
 
 env = ENVIRONMENT(
-                n_actions = 200,
+                n_actions = density,
                 rb_leader = rb_leader,
                 rb_member = rb_member,
                 rb_hidden = rb_hidden,
@@ -56,8 +56,10 @@ print('---------- Start processing ... ----------')
 print('------------------------------------------')
 
 action_list = []
+weight = 10
+min_weight = 1
 
-for time in range(int(state_size/2), (len(rb_member))):
+for time in range(int(state_size/2), len(rb_member) - 2):
     action_index = np.where(rb_leader[time] == 0)
     action_index = np.reshape(action_index, len(action_index[0]))
     
@@ -76,6 +78,8 @@ for time in range(int(state_size/2), (len(rb_member))):
     if observation_ > 0:
         collision_num +=1
         prob_collision.append(collision_num/(time+1))
+    reward = reward * weight
+    weight = max(weight * 0.99, min_weight)
     total_reward += reward
 
     next_state = np.concatenate([state[2:], [action, observation_]])
@@ -90,21 +94,21 @@ for time in range(int(state_size/2), (len(rb_member))):
     else:
         counter = 0
     state = next_state
-    print("Step:{0}%, action:{1}, reward:{2}".format(round((time + 1) * 100 / len(rb_member)), action, reward), end="\r")
+    print("Step:{0}%,\taction:{1},\treward:{2:.5f}".format(round((time + 1) * 100 / len(rb_member)), action, reward), end="\r")
 
 p_col_rl = collision_num/((len(rb_member)) - int(state_size/2))
 print("\ntotal reward is {0}".format(total_reward))
 print("\ncollision probability = ", p_col_rl)
 
-path = 'output.txt'
-f = open(path, 'w')
-cnt = 0
-for i in action_list:
-    f.write(f'{str(i)}\t')
-    cnt += 1
-    if cnt > 20:
-        f.write("\n")
-        cnt = 0
+# path = 'output.txt'
+# f = open(path, 'w')
+# cnt = 0
+# for i in action_list:
+#     f.write(f'{str(i)}\t')
+#     cnt += 1
+#     if cnt > 20:
+#         f.write("\n")
+#         cnt = 0
 
 # saving model
 # dqn_agent.save_model('./model.ckpt')
